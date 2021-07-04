@@ -1,4 +1,4 @@
-package com.github.hlam.raw;
+package com.github.hlam.data;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

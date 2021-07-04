@@ -1,6 +1,7 @@
 package com.github.hlam.raw;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.hlam.data.Person;
 import lombok.SneakyThrows;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;

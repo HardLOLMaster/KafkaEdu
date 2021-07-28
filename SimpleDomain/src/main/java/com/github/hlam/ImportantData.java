@@ -2,10 +2,12 @@ package com.github.hlam;
 
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class ImportantData {
     private String firstName;
     private String lastName;
-    private String birthDate;
-    private SimpleData importantData;
+    private Date birthday;
+    private SimpleData simpleData;
 }

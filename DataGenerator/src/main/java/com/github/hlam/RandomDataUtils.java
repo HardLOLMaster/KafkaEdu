@@ -3,43 +3,20 @@ package com.github.hlam;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.kafka.annotation.EnableKafka;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
-@EnableKafka
-@SpringBootApplication
-public class Main
-{
-    public static void main(String[] args)
-    {
-        SpringApplication.run(Main.class);
-    }
+public class RandomDataUtils {
+    private final static RandomDataGenerator randomDataGenerator = new RandomDataGenerator();
 
-    @Bean
-    public ApplicationRunner applicationRunner(KafkaProducers kafkaProducers)
-    {
-        return args -> {
-            RandomDataGenerator randomDataGenerator = new RandomDataGenerator();
-            for (int i = 0; i < 1000; i++)
-            {
-                ImportantData data = getRandomData(randomDataGenerator);
-
-                kafkaProducers.sendMessage(data);
-            }
-        };
-    }
-
-    @NotNull private ImportantData getRandomData(RandomDataGenerator randomDataGenerator)
-    {
+    @NotNull
+    public static ImportantData getRandomImportantData() {
         ImportantData data = new ImportantData();
         data.setFirstName(RandomStringUtils.random(randomDataGenerator.nextInt(5, 10), true, false));
         data.setLastName(RandomStringUtils.random(randomDataGenerator.nextInt(5, 10), true, false));
@@ -52,8 +29,8 @@ public class Main
         return data;
     }
 
-    @NotNull private Date getRandomDate()
-    {
+    @NotNull
+    private static Date getRandomDate() {
         Calendar from = Calendar.getInstance();
         from.set(1900, Calendar.JANUARY, 1);
 
@@ -62,11 +39,10 @@ public class Main
         LocalDate localDateFrom = LocalDateTime.ofInstant(from.toInstant(), from.getTimeZone().toZoneId()).toLocalDate();
         LocalDate localDateTo = LocalDateTime.ofInstant(to.toInstant(), to.getTimeZone().toZoneId()).toLocalDate();
 
-        return new Date(randomDate(localDateFrom, localDateTo).toEpochDay());
+        return Date.from(randomDate(localDateFrom, localDateTo).atTime(OffsetTime.now()).toInstant());
     }
 
-    private LocalDate randomDate(LocalDate startInclusive, LocalDate endExclusive)
-    {
+    private static LocalDate randomDate(LocalDate startInclusive, LocalDate endExclusive) {
         long startEpochDay = startInclusive.toEpochDay();
         long endEpochDay = endExclusive.toEpochDay();
         long randomDay = ThreadLocalRandom

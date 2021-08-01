@@ -13,4 +13,18 @@ public class Listeners {
         importantData.setLastName("LastName");
         return importantData;
     }
+
+    private int next = 0;
+
+    @KafkaListener(id = "listener2", topics = "replyRequestAggregate")
+    @SendTo
+    public ImportantData listener2(ImportantData importantData) {
+        if (next++ < 5) {
+            importantData.getSimpleData().setStringData("Next");
+        } else {
+            importantData.getSimpleData().setStringData("ImLast");
+            next = 0;
+        }
+        return importantData;
+    }
 }

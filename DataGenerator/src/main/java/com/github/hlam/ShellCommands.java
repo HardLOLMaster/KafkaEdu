@@ -11,13 +11,16 @@ import java.util.concurrent.ExecutionException;
 public class ShellCommands {
     @Autowired
     public ShellCommands(DefaultKafkaProducer defaultKafkaProducer,
-                         ReplyingKafkaProducer replyingKafkaProducer) {
+                         ReplyingKafkaProducer replyingKafkaProducer,
+                         AggregatingReplyingKafkaProducer aggregatingReplyingKafkaProducer) {
         this.defaultKafkaProducer = defaultKafkaProducer;
         this.replyingKafkaProducer = replyingKafkaProducer;
+        this.aggregatingReplyingKafkaProducer = aggregatingReplyingKafkaProducer;
     }
 
     private final DefaultKafkaProducer defaultKafkaProducer;
     private final ReplyingKafkaProducer replyingKafkaProducer;
+    private final AggregatingReplyingKafkaProducer aggregatingReplyingKafkaProducer;
 
     @ShellMethod(value = "Generate random data", key = "generate")
     public void generateRandomImportantData(@ShellOption(defaultValue = "default") String template,
@@ -26,6 +29,9 @@ public class ShellCommands {
         switch (template) {
             case "reply":
                 kafkaProducer = replyingKafkaProducer;
+                break;
+            case "aggregate":
+                kafkaProducer = aggregatingReplyingKafkaProducer;
                 break;
             case "default":
             default:

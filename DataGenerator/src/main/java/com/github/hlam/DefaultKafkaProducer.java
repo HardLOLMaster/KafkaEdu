@@ -9,15 +9,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
 
 @Component
 public class DefaultKafkaProducer implements IKafkaProducer {
-    private final Logger LOGGER = Logger.getLogger(DefaultKafkaProducer.class.getName());
     private final KafkaTemplate<String, ImportantData> kafkaTemplate;
 
     @Autowired
-    public DefaultKafkaProducer(@Qualifier("DefaultKafkaTemplate") KafkaTemplate<String, ImportantData> kafkaTemplate) {
+    public DefaultKafkaProducer(@Qualifier("dataKafkaTemplate") KafkaTemplate<String, ImportantData> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 

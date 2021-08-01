@@ -1,6 +1,7 @@
 package com.github.hlam;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -9,11 +10,14 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.BatchLoggingErrorHandler;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.LoggingErrorHandler;
+import org.springframework.kafka.requestreply.AggregatingReplyingKafkaTemplate;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,12 +36,12 @@ public class ProducerConfig {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
 
-    @Bean("DefaultKafkaTemplate")
+    @Bean
     public KafkaTemplate<String, ImportantData> dataKafkaTemplate(ProducerFactory<String, ImportantData> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 
-    @Bean("ReplyingKafkaTemplate")
+    @Bean
     public ReplyingKafkaTemplate<String, ImportantData, ImportantData> replyingKafkaTemplate(
             ProducerFactory<String, ImportantData> producerFactory,
             ConcurrentMessageListenerContainer<String, ImportantData> repliesContainer) {
@@ -47,8 +51,38 @@ public class ProducerConfig {
     }
 
     @Bean
+    public AggregatingReplyingKafkaTemplate<String, ImportantData, ImportantData> aggregatingReplyingKafkaTemplate(
+            ProducerFactory<String, ImportantData> producerFactory,
+            ConcurrentMessageListenerContainer<String,
+                    Collection<ConsumerRecord<String, ImportantData>>> repliesContainer) {
+        AggregatingReplyingKafkaTemplate<String, ImportantData, ImportantData> replyingKafkaTemplate =
+                new AggregatingReplyingKafkaTemplate<>(producerFactory,
+                        repliesContainer,
+                        (consumerRecords, aBoolean) -> {
+                            boolean result = false;
+                            for (ConsumerRecord<String, ImportantData> consumerRecord : consumerRecords) {
+                                ImportantData value = consumerRecord.value();
+                                SimpleData simpleData = value.getSimpleData();
+                                result = "ImLast".equalsIgnoreCase(simpleData.getStringData());
+                            }
+                            return result;
+                        });
+        replyingKafkaTemplate.setSharedReplyTopic(true);
+        return replyingKafkaTemplate;
+    }
+
+    @Bean
     public ConsumerFactory<String, ImportantData> consumerFactory() {
         JsonDeserializer<ImportantData> deserializer = new JsonDeserializer<>();
+        deserializer.addTrustedPackages("*");
+        return new DefaultKafkaConsumerFactory<>(consumerConfig(),
+                new StringDeserializer(),
+                deserializer);
+    }
+
+    @Bean
+    public ConsumerFactory<String, Collection<ConsumerRecord<String, ImportantData>>> consumerFactoryCollection() {
+        JsonDeserializer<Collection<ConsumerRecord<String, ImportantData>>> deserializer = new JsonDeserializer<>();
         deserializer.addTrustedPackages("*");
         return new DefaultKafkaConsumerFactory<>(consumerConfig(),
                 new StringDeserializer(),
@@ -73,6 +107,16 @@ public class ProducerConfig {
     }
 
     @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, Collection<ConsumerRecord<String, ImportantData>>>
+    kafkaListenerContainerFactoryCollection(ConsumerFactory<String, Collection<ConsumerRecord<String, ImportantData>>> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, Collection<ConsumerRecord<String, ImportantData>>> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setErrorHandler(new LoggingErrorHandler());
+        return factory;
+    }
+
+    @Bean
     public ConcurrentMessageListenerContainer<String, ImportantData> repliesContainer(
             ConcurrentKafkaListenerContainerFactory<String, ImportantData> containerFactory) {
 
@@ -81,6 +125,20 @@ public class ProducerConfig {
         repliesContainer.getContainerProperties().setGroupId("repliesGroup");
         repliesContainer.setAutoStartup(false);
         repliesContainer.setBatchErrorHandler(new BatchLoggingErrorHandler());
+        return repliesContainer;
+    }
+
+    @Bean
+    public ConcurrentMessageListenerContainer<String, Collection<ConsumerRecord<String, ImportantData>>> repliesContainerCollection(
+            ConcurrentKafkaListenerContainerFactory<String, Collection<ConsumerRecord<String, ImportantData>>> containerFactory) {
+        ContainerProperties containerProperties = containerFactory.getContainerProperties();
+        containerProperties.getKafkaConsumerProperties().setProperty("enable.auto.commit", "false");
+        ConcurrentMessageListenerContainer<String, Collection<ConsumerRecord<String, ImportantData>>> repliesContainer =
+                containerFactory.createContainer("replyResponseAggregate");
+        repliesContainer.getContainerProperties().setGroupId("repliesGroupAggregate");
+        repliesContainer.setAutoStartup(false);
+        repliesContainer.setBatchErrorHandler(new BatchLoggingErrorHandler());
+        repliesContainer.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         return repliesContainer;
     }
 }

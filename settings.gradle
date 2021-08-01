@@ -2,4 +2,5 @@ rootProject.name = 'KafkaEdu'
 
 include 'SimpleDomain'
 include 'DataGenerator'
+include 'DataConsumer'
 include 'DataLogger'

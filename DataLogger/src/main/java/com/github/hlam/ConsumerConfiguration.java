@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.LoggingErrorHandler;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
@@ -17,8 +15,7 @@ import java.util.Map;
 
 @Configuration
 public class ConsumerConfiguration {
-    public Map<String, Object> consumerConfig()
-    {
+    public Map<String, Object> consumerConfig() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -28,14 +25,7 @@ public class ConsumerConfiguration {
     }
 
     @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory)
-    {
-        return new KafkaTemplate<>(producerFactory);
-    }
-
-    @Bean
-    public ConsumerFactory<String, Object> consumerFactory()
-    {
+    public ConsumerFactory<String, Object> consumerFactory() {
         JsonDeserializer<Object> deserializer = new JsonDeserializer<>();
         deserializer.addTrustedPackages("*");
         return new DefaultKafkaConsumerFactory<>(consumerConfig(),
@@ -44,12 +34,9 @@ public class ConsumerConfiguration {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(KafkaTemplate<String, Object> kafkaTemplate,
-                                                                                                 ConsumerFactory<String, Object> consumerFactory)
-    {
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(ConsumerFactory<String, Object> consumerFactory) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
-        factory.setReplyTemplate(kafkaTemplate);
         factory.setErrorHandler(new LoggingErrorHandler());
         return factory;
     }

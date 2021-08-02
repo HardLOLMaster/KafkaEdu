@@ -58,16 +58,27 @@ public class ProducerConfig {
         AggregatingReplyingKafkaTemplate<String, ImportantData, ImportantData> replyingKafkaTemplate =
                 new AggregatingReplyingKafkaTemplate<>(producerFactory,
                         repliesContainer,
-                        (consumerRecords, aBoolean) -> {
+                        (consumerRecords, bool) -> {
+                            System.out.println("RECORDS IN = " + consumerRecords.size());
+                            System.out.println("bool = " + bool);
+//                            return bool; //condition for exit if timeout
                             boolean result = false;
+//                            if(consumerRecords.size()==2){// condition for exit
+//                                consumerRecords.remove(1);
+//                                return true;
+//                            }
                             for (ConsumerRecord<String, ImportantData> consumerRecord : consumerRecords) {
                                 ImportantData value = consumerRecord.value();
                                 SimpleData simpleData = value.getSimpleData();
                                 result = "ImLast".equalsIgnoreCase(simpleData.getStringData());
+                                System.out.println("simpleDate = " + value.getSimpleData().getStringData() + "; result = " + result);
                             }
                             return result;
+//                            return consumerRecords.size()==2; //condition for exit
                         });
         replyingKafkaTemplate.setSharedReplyTopic(true);
+        replyingKafkaTemplate.setReturnPartialOnTimeout(false); //exit by no timeout
+//        replyingKafkaTemplate.setReturnPartialOnTimeout(true); // exit by timeout
         return replyingKafkaTemplate;
     }
 

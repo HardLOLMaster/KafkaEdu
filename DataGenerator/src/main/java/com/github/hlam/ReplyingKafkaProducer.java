@@ -20,15 +20,18 @@ public class ReplyingKafkaProducer implements IKafkaProducer {
     }
 
     @Override
-    public void sendMessage(ImportantData data) throws ExecutionException, InterruptedException {
-        ProducerRecord<String, ImportantData> record = new ProducerRecord<>("replyRequest", data);
-        RequestReplyFuture<String, ImportantData, ImportantData> replyFuture = kafkaTemplate.sendAndReceive(record);
+    public void sendMessage(int count) throws ExecutionException, InterruptedException {
+        for (int i = 0; i < count; i++) {
+            ImportantData data = RandomDataUtils.getRandomImportantData();
+            ProducerRecord<String, ImportantData> record = new ProducerRecord<>("replyRequest", data);
+            RequestReplyFuture<String, ImportantData, ImportantData> replyFuture = kafkaTemplate.sendAndReceive(record);
 //        replyFuture.getSendFuture().addCallback(result -> {
 //                    assert result != null;
 //                    LOGGER.log(Level.INFO, result.getProducerRecord().value().toString());
 //                },
 //                ex -> LOGGER.log(Level.WARNING, ex.getMessage()));
-        ConsumerRecord<String, ImportantData> consumerRecord = replyFuture.get();
-        System.out.printf("REPLY topic: %s; value %s;%n", consumerRecord.topic(), consumerRecord.value().toString());
+            ConsumerRecord<String, ImportantData> consumerRecord = replyFuture.get();
+            System.out.printf("REPLY topic: %s; value %s;%n", consumerRecord.topic(), consumerRecord.value().toString());
+        }
     }
 }

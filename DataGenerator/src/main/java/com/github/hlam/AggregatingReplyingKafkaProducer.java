@@ -9,6 +9,7 @@ import org.springframework.kafka.requestreply.RequestReplyFuture;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
+import java.time.Duration;
 import java.util.Collection;
 
 @Component
@@ -21,10 +22,18 @@ public class AggregatingReplyingKafkaProducer implements IKafkaProducer {
     }
 
     @Override
-    public void sendMessage(ImportantData data) {
+    public void sendMessage(int count) {
+        ImportantData data = RandomDataUtils.getRandomImportantData();
         ProducerRecord<String, ImportantData> record = new ProducerRecord<>("replyRequestAggregate", data);
-        RequestReplyFuture<String, ImportantData, Collection<ConsumerRecord<String, ImportantData>>> replyFuture = kafkaTemplate.sendAndReceive(record);
-//        ConsumerRecord<String, Collection<ConsumerRecord<String, ImportantData>>> consumerRecord =
+        RequestReplyFuture<String, ImportantData, Collection<ConsumerRecord<String, ImportantData>>> replyFuture
+                = kafkaTemplate.sendAndReceive(record, Duration.ofSeconds(3));
+//        ConsumerRecord<String, Collection<ConsumerRecord<String, ImportantData>>> consumerRecord = replyFuture.get();
+//        Collection<ConsumerRecord<String, ImportantData>> value = consumerRecord.value();
+//        System.out.printf("REPLY topic: %s; size %s;\n", consumerRecord.topic(),
+//                consumerRecord.serializedValueSize());
+//        for (ConsumerRecord<String, ImportantData> dataConsumerRecord : value) {
+//            System.out.printf("REPLY topic: %s; value %s;\n", dataConsumerRecord.topic(), dataConsumerRecord.value().toString());
+//        }
         replyFuture.addCallback(new ListenableFutureCallback<>() {
             @Override
             public void onFailure(@NotNull Throwable ex) {
@@ -34,9 +43,10 @@ public class AggregatingReplyingKafkaProducer implements IKafkaProducer {
             @Override
             public void onSuccess(ConsumerRecord<String, Collection<ConsumerRecord<String, ImportantData>>> consumerRecord) {
                 Collection<ConsumerRecord<String, ImportantData>> value = consumerRecord.value();
-                System.out.printf("REPLY topic: %s; value %s;%n", consumerRecord.topic(), consumerRecord.value().toString());
+                System.out.printf("REPLY topic: %s; size %s;\n", consumerRecord.topic(),
+                        consumerRecord.serializedValueSize());
                 for (ConsumerRecord<String, ImportantData> dataConsumerRecord : value) {
-                    System.out.printf("REPLY topic: %s; value %s;%n", dataConsumerRecord.topic(), dataConsumerRecord.value().toString());
+                    System.out.printf("REPLY topic: %s; value %s;\n", dataConsumerRecord.topic(), dataConsumerRecord.value().toString());
                 }
             }
         });

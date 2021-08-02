@@ -20,9 +20,12 @@ public class DefaultKafkaProducer implements IKafkaProducer {
     }
 
     @Override
-    public void sendMessage(ImportantData data) throws ExecutionException, InterruptedException {
-        ProducerRecord<String, ImportantData> record = new ProducerRecord<>("topic1", data);
-        ListenableFuture<SendResult<String, ImportantData>> future = kafkaTemplate.send(record);
-        System.out.print(future.get().getProducerRecord().value().toString());
+    public void sendMessage(int count) throws ExecutionException, InterruptedException {
+        for (int i = 0; i < count; i++) {
+            ImportantData data = RandomDataUtils.getRandomImportantData();
+            ProducerRecord<String, ImportantData> record = new ProducerRecord<>("topic1", data);
+            ListenableFuture<SendResult<String, ImportantData>> future = kafkaTemplate.send(record);
+            System.out.print(future.get().getProducerRecord().value().toString());
+        }
     }
 }

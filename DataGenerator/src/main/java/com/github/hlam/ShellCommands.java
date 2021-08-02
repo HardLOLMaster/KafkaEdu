@@ -38,9 +38,6 @@ public class ShellCommands {
                 kafkaProducer = defaultKafkaProducer;
                 break;
         }
-        for (int i = 0; i < count; i++) {
-            ImportantData data = RandomDataUtils.getRandomImportantData();
-            kafkaProducer.sendMessage(data);
-        }
+        kafkaProducer.sendMessage(count);
     }
 }

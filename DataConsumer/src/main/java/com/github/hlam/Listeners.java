@@ -1,6 +1,8 @@
 package com.github.hlam;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.TopicPartition;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,18 @@ public class Listeners {
         importantData.setFirstName("FirstName");
         importantData.setLastName("LastName");
         return importantData;
+    }
+
+    @KafkaListener(id = "listener10", topicPartitions = {@TopicPartition(topic = "topic1", partitions = "0")})
+    public ImportantData listener10(ConsumerRecord<String, ImportantData> record) {
+        System.out.println("listener10 " + record.partition());
+        return record.value();
+    }
+
+    @KafkaListener(id = "listener11", topicPartitions = {@TopicPartition(topic = "topic1", partitions = "1")})
+    public ImportantData listener11(ConsumerRecord<String, ImportantData> record) {
+        System.out.println("listener11 " + record.partition());
+        return record.value();
     }
 
     private int next1 = 0;

@@ -53,8 +53,7 @@ public class ProducerConfig {
     @Bean
     public AggregatingReplyingKafkaTemplate<String, ImportantData, ImportantData> aggregatingReplyingKafkaTemplate(
             ProducerFactory<String, ImportantData> producerFactory,
-            ConcurrentMessageListenerContainer<String,
-                    Collection<ConsumerRecord<String, ImportantData>>> repliesContainer) {
+            ConcurrentMessageListenerContainer<String, Collection<ConsumerRecord<String, ImportantData>>> repliesContainer) {
         AggregatingReplyingKafkaTemplate<String, ImportantData, ImportantData> replyingKafkaTemplate =
                 new AggregatingReplyingKafkaTemplate<>(producerFactory,
                         repliesContainer,

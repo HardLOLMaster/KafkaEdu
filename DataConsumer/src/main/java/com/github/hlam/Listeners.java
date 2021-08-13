@@ -3,8 +3,11 @@ package com.github.hlam;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.TopicPartition;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
+
+import javax.validation.Valid;
 
 @Component
 public class Listeners {
@@ -22,10 +25,11 @@ public class Listeners {
         return record.value();
     }
 
-    @KafkaListener(id = "listener11", topicPartitions = {@TopicPartition(topic = "topic1", partitions = "1")})
-    public ImportantData listener11(ConsumerRecord<String, ImportantData> record) {
-        System.out.println("listener11 " + record.partition());
-        return record.value();
+    @KafkaListener(id = "listener11",
+            topicPartitions = {@TopicPartition(topic = "topic1", partitions = "1")},
+            errorHandler = "validationErrorHandler")
+    public void listener11(@Payload @Valid ImportantData record) {
+        System.out.println("listener11 " + record);
     }
 
     private int next1 = 0;
